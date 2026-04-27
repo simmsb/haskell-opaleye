@@ -437,10 +437,12 @@ arrayPosition (Column fs) (Column f') =
   C.Column (HPQ.FunExpr "array_position" [fs , f'])
 
 -- | Whether the element (needle) exists in the array (haystack).
+-- N.B. this is implemented hackily using @array_position@.  If you
+-- need it to be implemented using @= any@ then please open an issue.
 sqlElem :: F.Field_ n a -- ^ Needle
         -> F.Field (T.SqlArray_ n a) -- ^ Haystack
         -> F.Field T.SqlBool
-sqlElem (Column f) (Column fs) = Column $ HPQ.AnyExpr (HPQ.:==) f fs
+sqlElem f fs = (O.not . F.isNull . arrayPosition fs) f
 
 overlap :: Field (T.SqlRange a) -> Field (T.SqlRange a) -> F.Field T.SqlBool
 overlap = C.binOp (HPQ.:&&)
